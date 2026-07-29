@@ -1,0 +1,16 @@
+# Raw downloads — large, reproducible via `python pipeline/download.py`
+data/raw/
+
+# The user's own local music (never shipped, never committed)
+audio/local/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+
+# Secrets
+.env
