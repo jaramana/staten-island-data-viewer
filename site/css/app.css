@@ -1,0 +1,274 @@
+/* Staten Island Data Viewer — chrome.
+   Tokens are the ones written down in docs/VISUAL_IDENTITY.md. If you change a
+   value here, change it there too; that doc is the contract. */
+
+:root {
+  /* chrome — cool gunmetal */
+  --chrome-900: #0d1520;
+  --chrome-800: #16212f;
+  --chrome-700: #223143;
+  --chrome-600: #33475e;
+  --chrome-500: #4a637f;
+  --chrome-100: #c6d4e4;
+  --chrome-000: #eef4fb;
+
+  --accent-amber: #f0a830;
+  --accent-amber-hi: #ffd177;
+  --accent-cyan: #4fd0e0;
+  --accent-red: #e2564a;
+  --accent-green: #63c46a;
+
+  /* world */
+  --world-water: #1c4f6e;
+  --world-land: #3f4a35;
+  --world-park: #4a6b38;
+
+  --sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+
+  --panel-radius: 3px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--chrome-900);
+  font-family: var(--sans);
+  color: var(--chrome-100);
+  -webkit-font-smoothing: antialiased;
+}
+
+#map { position: absolute; inset: 0; }
+
+/* Vignette: a CSS-only post-process pass (PLAN.md §2.1), no images. */
+#vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  background: radial-gradient(ellipse at 50% 45%,
+    rgba(0,0,0,0) 45%, rgba(0,0,0,0.22) 78%, rgba(0,0,0,0.45) 100%);
+}
+
+/* ------------------------------------------------------------------ panels */
+
+.panel {
+  background: linear-gradient(180deg, var(--chrome-700), var(--chrome-800));
+  border: 1px solid var(--chrome-900);
+  border-radius: var(--panel-radius);
+  box-shadow:
+    inset 0 1px 0 var(--chrome-600),
+    inset 0 -1px 0 var(--chrome-900),
+    0 6px 18px rgba(0,0,0,0.45);
+}
+
+.panel-title {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--chrome-500);
+  padding: 7px 10px 5px;
+  border-bottom: 1px solid var(--chrome-900);
+  box-shadow: inset 0 -1px 0 var(--chrome-600);
+}
+
+/* --------------------------------------------------------- top readout bar */
+
+#hud-top {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 10;
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  pointer-events: none;
+}
+#hud-top > * { pointer-events: auto; }
+
+#brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+}
+#brand .mark {
+  width: 22px; height: 22px;
+  border-radius: 2px;
+  border: 1px solid var(--chrome-900);
+  background: linear-gradient(150deg, var(--accent-amber), #b9761b);
+  box-shadow: inset 0 1px 0 var(--accent-amber-hi);
+  flex: none;
+}
+#brand h1 {
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--chrome-000);
+  font-weight: 600;
+  white-space: nowrap;
+}
+#brand .sub {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--chrome-500);
+  white-space: nowrap;
+}
+
+#readouts {
+  display: flex;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+.readout {
+  padding: 6px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+.readout .label {
+  font-size: 9.5px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--chrome-500);
+  white-space: nowrap;
+}
+.readout .value {
+  font-family: var(--mono);
+  font-size: 15px;
+  color: var(--accent-amber);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+.readout .value.small { font-size: 12px; }
+
+/* ------------------------------------------------------------ camera chrome */
+
+#camera-tools {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+}
+
+.btn {
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--chrome-100);
+  background: linear-gradient(180deg, var(--chrome-700), var(--chrome-800));
+  border: 1px solid var(--chrome-900);
+  border-radius: var(--panel-radius);
+  box-shadow:
+    inset 0 1px 0 var(--chrome-600),
+    inset 0 -1px 0 var(--chrome-900),
+    0 3px 10px rgba(0,0,0,0.4);
+  padding: 7px 11px;
+  cursor: pointer;
+  transition: box-shadow 90ms ease-out, color 90ms ease-out;
+  user-select: none;
+}
+.btn:hover {
+  color: var(--chrome-000);
+  box-shadow:
+    inset 0 0 0 1px var(--accent-cyan),
+    inset 0 1px 0 var(--chrome-600),
+    0 3px 10px rgba(0,0,0,0.4);
+}
+.btn:active { box-shadow: inset 0 2px 6px rgba(0,0,0,0.5); }
+.btn.is-active {
+  color: var(--accent-amber-hi);
+  box-shadow:
+    inset 0 0 0 1px var(--accent-amber),
+    inset 0 1px 0 var(--chrome-600),
+    0 0 12px rgba(240,168,48,0.25);
+}
+
+#compass {
+  width: 44px; height: 44px;
+  display: grid; place-items: center;
+  cursor: grab;
+}
+#compass svg { display: block; }
+
+/* -------------------------------------------------------------- data footer */
+
+#data-footer {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  z-index: 10;
+  max-width: 46ch;
+  padding: 7px 11px;
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--chrome-500);
+}
+#data-footer strong { color: var(--chrome-100); font-weight: 500; }
+#data-footer a { color: var(--accent-cyan); text-decoration: none; }
+#data-footer a:hover { text-decoration: underline; }
+
+/* --------------------------------------------------------------- loading */
+
+#boot {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  background: var(--chrome-900);
+  transition: opacity 400ms ease-out;
+}
+#boot.done { opacity: 0; pointer-events: none; }
+#boot .inner { text-align: center; }
+#boot .title {
+  font-size: 12px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--chrome-100);
+  margin-bottom: 14px;
+}
+#boot .bar {
+  width: 220px; height: 4px;
+  background: var(--chrome-800);
+  border: 1px solid var(--chrome-900);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 0 auto;
+}
+#boot .bar span {
+  display: block; height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--accent-amber), var(--accent-amber-hi));
+  transition: width 200ms ease-out;
+}
+#boot .step {
+  margin-top: 10px;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--chrome-500);
+}
+
+/* hide MapLibre's own chrome — this project brings its own */
+.maplibregl-ctrl-attrib, .maplibregl-ctrl-logo { display: none !important; }
+
+@media (max-width: 860px) {
+  #brand .sub { display: none; }
+  .readout { padding: 6px 10px; }
+  #data-footer { max-width: 30ch; }
+}

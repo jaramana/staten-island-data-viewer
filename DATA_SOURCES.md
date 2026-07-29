@@ -44,7 +44,7 @@ permit reuse with attribution. Attribution appears in the app footer.
 - **Access method:** SODA v2 REST, paged; `pipeline/download.py`
 - **Staten Island filter:** `borocode='5'`
 - **Fields pulled:** `borocode,boroname,the_geom`
-- **Verified reachable:** 2026-07-29T15:48:25+00:00 — 1 rows match the filter (not yet downloaded)
+- **Fetched:** 2026-07-29T15:50:56+00:00 — 1 rows, 0.4 MB raw
 
 ### `buildings` — Building Footprints (BUILDING)
 
@@ -56,7 +56,7 @@ permit reuse with attribution. Attribution appears in the app footer.
 - **Access method:** SODA v2 REST, paged; `pipeline/download.py`
 - **Staten Island filter:** `starts_with(base_bbl,'5')`
 - **Fields pulled:** `bin,base_bbl,mappluto_bbl,height_roof,ground_elevation,construction_year,feature_code,the_geom`
-- **Verified reachable:** 2026-07-29T15:48:26+00:00 — 142,455 rows match the filter (not yet downloaded)
+- **Fetched:** 2026-07-29T15:51:59+00:00 — 142,455 rows, 81.1 MB raw
 - **Note:** Substituted for the '3-D Building Model' (tnru-abg2) named in PLAN.md §3. That asset was last updated 2016 and ships as per-tile multipatch/DWG files that a browser cannot consume; this is the same city building inventory, currently maintained, with height_roof + ground_elevation in feet and a base_bbl to join PLUTO on. See DATA_SOURCES.md.
 
 ### `pluto` — Primary Land Use Tax Lot Output (PLUTO)
@@ -69,7 +69,7 @@ permit reuse with attribution. Attribution appears in the app footer.
 - **Access method:** SODA v2 REST, paged; `pipeline/download.py`
 - **Staten Island filter:** `borough='SI'`
 - **Fields pulled:** `bbl,borough,block,lot,address,landuse,bldgclass,zonedist1,ownertype,numfloors,numbldgs,unitsres,unitstotal,lotarea,bldgarea,yearbuilt,assesstot,cd,policeprct,firecomp`
-- **Verified reachable:** 2026-07-29T15:48:27+00:00 — 125,692 rows match the filter (not yet downloaded)
+- **Fetched:** 2026-07-29T15:52:12+00:00 — 125,692 rows, 48.5 MB raw
 
 ### `streets` — Street Centerline (CSCL Centerline)
 
@@ -81,7 +81,7 @@ permit reuse with attribution. Attribution appears in the app footer.
 - **Access method:** SODA v2 REST, paged; `pipeline/download.py`
 - **Staten Island filter:** `boroughcode='5'`
 - **Fields pulled:** `physicalid,rw_type,trafdir,streetwidth,number_travel_lanes,posted_speed,status,segmentlength,the_geom`
-- **Verified reachable:** 2026-07-29T15:48:28+00:00 — 16,714 rows match the filter (not yet downloaded)
+- **Fetched:** 2026-07-29T15:52:19+00:00 — 16,714 rows, 6.3 MB raw
 - **Note:** Substituted for LION (2v4z-66xt) named in PLAN.md §3. The LION Socrata asset is a stale (2013) zipped file geodatabase requiring GDAL; CSCL Centerline is the city's currently-maintained street centerline, served as queryable GeoJSON. Same role, same publisher, live vintage.
 
 ### `parks` — Parks Properties
@@ -94,7 +94,7 @@ permit reuse with attribution. Attribution appears in the app footer.
 - **Access method:** SODA v2 REST, paged; `pipeline/download.py`
 - **Staten Island filter:** `borough='R'`
 - **Fields pulled:** `gispropnum,signname,typecategory,acres,borough,multipolygon`
-- **Verified reachable:** 2026-07-29T15:48:29+00:00 — 161 rows match the filter (not yet downloaded)
+- **Fetched:** 2026-07-29T15:52:22+00:00 — 161 rows, 0.9 MB raw
 
 ### `police_precincts` — Police Precincts
 
@@ -106,7 +106,7 @@ permit reuse with attribution. Attribution appears in the app footer.
 - **Access method:** SODA v2 REST, paged; `pipeline/download.py`
 - **Staten Island filter:** `precinct in ('120','121','122','123')`
 - **Fields pulled:** `precinct,the_geom`
-- **Verified reachable:** 2026-07-29T15:48:29+00:00 — 4 rows match the filter (not yet downloaded)
+- **Fetched:** 2026-07-29T15:52:23+00:00 — 4 rows, 0.4 MB raw
 
 ### `fire_companies` — Fire Companies
 
@@ -118,7 +118,7 @@ permit reuse with attribution. Attribution appears in the app footer.
 - **Access method:** SODA v2 REST, paged; `pipeline/download.py`
 - **Staten Island filter:** `fire_div='8'`
 - **Fields pulled:** `fire_co_type,fire_co_num,fire_div,fire_bn,the_geom`
-- **Verified reachable:** 2026-07-29T15:48:30+00:00 — 50 rows match the filter (not yet downloaded)
+- **Fetched:** 2026-07-29T15:52:24+00:00 — 50 rows, 1.0 MB raw
 - **Note:** FDNY Division 8 is Staten Island; verified against the borough clip anyway. Uses the tabular asset bst7-5464 rather than the map asset iiv7-jaj9 named in PLAN.md §3 — same DCP dataset and vintage, but the map asset returns empty properties and null geometry over SODA.
 
 ### `firehouses` — FDNY Firehouse Listing
@@ -131,7 +131,7 @@ permit reuse with attribution. Attribution appears in the app footer.
 - **Access method:** SODA v2 REST, paged; `pipeline/download.py`
 - **Staten Island filter:** `borough='Staten Island'`
 - **Fields pulled:** `facilityname,facilityaddress,borough,postcode,latitude,longitude`
-- **Verified reachable:** 2026-07-29T15:48:31+00:00 — 20 rows match the filter (not yet downloaded)
+- **Fetched:** 2026-07-29T15:52:25+00:00 — 20 rows, 0.0 MB raw
 
 ### `crime` — NYPD Complaint Data Current (Year To Date)
 
@@ -143,7 +143,7 @@ permit reuse with attribution. Attribution appears in the app footer.
 - **Access method:** SODA v2 REST, paged; `pipeline/download.py`
 - **Staten Island filter:** `boro_nm='STATEN ISLAND'`
 - **Fields pulled:** `cmplnt_num,addr_pct_cd,cmplnt_fr_dt,ofns_desc,law_cat_cd,prem_typ_desc,latitude,longitude`
-- **Verified reachable:** 2026-07-29T15:48:31+00:00 — 10,807 rows match the filter (not yet downloaded)
+- **Fetched:** 2026-07-29T15:52:27+00:00 — 10,807 rows, 2.6 MB raw
 
 ### `sr311` — 311 Service Requests (2020 to Present)
 
@@ -155,7 +155,7 @@ permit reuse with attribution. Attribution appears in the app footer.
 - **Access method:** SODA v2 REST, paged; `pipeline/download.py`
 - **Staten Island filter:** `borough='STATEN ISLAND' AND created_date > '2025-07-29T00:00:00' AND latitude IS NOT NULL`
 - **Fields pulled:** `unique_key,created_date,closed_date,complaint_type,descriptor,status,agency,incident_zip,latitude,longitude`
-- **Verified reachable:** 2026-07-29T15:48:36+00:00 — 153,330 rows match the filter (not yet downloaded)
+- **Fetched:** 2026-07-29T15:52:56+00:00 — 153,330 rows, 48.4 MB raw
 
 ### `trees` — Forestry Tree Points
 
@@ -167,7 +167,7 @@ permit reuse with attribution. Attribution appears in the app footer.
 - **Access method:** SODA v2 REST, paged; `pipeline/download.py`
 - **Staten Island filter:** `within_box(location,40.66,-74.28,40.47,-74.02)`
 - **Fields pulled:** `objectid,dbh,tpstructure,tpcondition,genusspecies,planteddate,location`
-- **Verified reachable:** 2026-07-29T15:48:37+00:00 — 172,172 rows match the filter (not yet downloaded)
+- **Fetched:** 2026-07-29T15:54:12+00:00 — 172,172 rows, 39.5 MB raw
 - **Note:** No borough column; pre-filtered by bounding box server-side, then clipped precisely to the borough polygon locally. This is a rolling inventory keyed to planting spaces, not a dated tree census — labelled as such.
 
 ### `budget` — Expense Budget — Community Boards Geographic Report
@@ -180,7 +180,7 @@ permit reuse with attribution. Attribution appears in the app footer.
 - **Access method:** SODA v2 REST, paged; `pipeline/download.py`
 - **Staten Island filter:** `boro_nm='RICHMOND'`
 - **Fields pulled:** `pub_dt,fisc_yr,bud_phs_nm,agy_cd,agy_nm,ua_nm,boro_nm,sub_boro_nm,geo_prg_nm,lcl_serv_dist_nm,curr_amt,curr_pos,bud_amt,bud_pos`
-- **Verified reachable:** 2026-07-29T15:48:38+00:00 — 546 rows match the filter (not yet downloaded)
+- **Fetched:** 2026-07-29T15:54:13+00:00 — 546 rows, 0.2 MB raw
 - **Note:** PLAN.md §3 left the budget source unresolved. The NYC Council budget dashboard publishes no public API; this OMB dataset is the fallback and is strictly better for this project because it is borough-scoped rather than citywide. 'RICHMOND' is Staten Island.
 
 ### `population` — New York City Population by Borough, 1950–2040
@@ -193,7 +193,7 @@ permit reuse with attribution. Attribution appears in the app footer.
 - **Access method:** SODA v2 REST, paged; `pipeline/download.py`
 - **Staten Island filter:** `None`
 - **Fields pulled:** `*`
-- **Verified reachable:** 2026-07-29T15:48:39+00:00 — 6 rows match the filter (not yet downloaded)
+- **Fetched:** 2026-07-29T15:54:14+00:00 — 6 rows, 0.0 MB raw
 - **Note:** 1950–2020 columns are decennial Census counts; 2030/2040 columns are DCP projections and must be labelled as projections wherever shown. The Census Bureau ACS API now requires a registered key, which is a user action — see DATA_SOURCES.md, Open items.
 
 ## Open items (need a user decision or a user-owned account)
