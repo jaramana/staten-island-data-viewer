@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Staten Island Data Viewer</title>
+<meta name="description" content="An interactive-to-view 3D data viewer of Staten Island, built entirely from real NYC open data.">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<div id="map"></div>
+<div id="vignette"></div>
+
+<div id="hud-top">
+  <div class="panel" id="brand">
+    <div class="mark"></div>
+    <div>
+      <h1>Staten Island</h1>
+      <div class="sub">Data viewer — a snapshot, not a simulation</div>
+    </div>
+  </div>
+  <div class="panel" id="viewpoints" style="display:flex; gap:6px; padding:6px; align-items:center;"></div>
+</div>
+
+<div id="camera-tools">
+  <div class="panel" id="compass"></div>
+</div>
+
+<div class="panel" id="data-footer">Loading data manifest…</div>
+
+<div id="boot">
+  <div class="inner">
+    <div class="title">Staten Island</div>
+    <div class="bar"><span></span></div>
+    <div class="step">starting</div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

@@ -53,13 +53,14 @@ dark makes the warm world pop, which is most of the SC4 feeling.
 | Token | Hex | Use |
 |---|---|---|
 | `--world-water` | `#1c4f6e` | Harbour, Kill Van Kull, Arthur Kill |
-| `--world-water-shallow` | `#2a6f8f` | Shoreline band |
-| `--world-land` | `#3f4a35` | Base ground (deliberately drab) |
-| `--world-park` | `#4a6b38` | Parks Properties polygons |
-| `--world-park-hi` | `#5d8244` | Park edge highlight |
-| `--road-major` | `#d8c9a8` | Highways / arterials (rw_type 2,3,9) |
-| `--road-minor` | `#a89a80` | Local streets (rw_type 1) |
-| `--road-casing` | `#2b2b26` | Road outline (the "chunky outline" trick) |
+| `--world-water-shallow` | `#2f7898` | Shoreline band |
+| `--world-land` | `#57603f` | Base ground (muted, but not a silhouette) |
+| `--world-park` | `#5f8442` | Parks Properties polygons |
+| `--world-park-hi` | `#78a052` | Park edge highlight |
+| `--road-major` | `#f0e2ba` | Highways / arterials (rw_type 2,3,9) |
+| `--road-minor` | `#c9bb99` | Local streets (rw_type 1) |
+| `--road-casing` | `#26261f` | Road outline (the "chunky outline" trick) |
+| `--ferry` | `#7fb3c4` | Ferry routes — dashed wake, never a road |
 | `--sky-day` | `#8fc4e8` | Sky top, midday |
 | `--haze-day` | `#cfd9c8` | Fog / horizon blend, midday |
 

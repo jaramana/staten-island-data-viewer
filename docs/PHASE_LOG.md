@@ -173,3 +173,72 @@ clip → reduce → round → write, and prints what it dropped and why.
   comfortable with. It is fine gzipped, but browser parse + tile time is the
   real risk. **Phase 3's performance gate is where this gets decided**, and I'd
   rather fail it there loudly than paper over it now.
+
+---
+
+## Phase 2 — Base map & camera ✅
+
+An empty but real Staten Island: water, land, parkland, the street network, and
+a camera locked to a city-builder oblique.
+
+### Built
+
+- **No basemap tiles, no tile server, no sourced art.** The entire world is
+  three local files. Water is the `background` layer; **land is the borough
+  polygon drawn on top of the water** — which is exactly right, because DCP's
+  borough boundary already excludes water. Parks sit on the land, roads on top.
+- **Roads:** dark casing under light fill — the chunky-outline trick that makes
+  the network read as a game board rather than a GIS layer. Widths interpolate
+  over zoom, classed from CSCL `rw_type` (highway/bridge/ramp wider than local
+  streets, service/alley narrower).
+- **Ferry routes** get their own faint dashed treatment. They're in the
+  centerline file and run out across open water to Manhattan; drawn as a wake,
+  they read as a route rather than a road you could drive on.
+- **Camera:** pitch locked to 30–68° (never straight down, never a sliver),
+  bearing free, `maxBounds` around the borough, `minZoom` 10.6. Six viewpoint
+  presets (Whole borough, St. George, The Narrows, North Shore, South Shore,
+  The Greenbelt) that `easeTo` in 900 ms. Keyboard: Q/E rotate, R/F tilt,
+  0 resets. Compass needle drawn in SVG in code, click to reset north.
+- **Chrome:** the panel recipe from the identity doc — gunmetal gradient, top
+  bevel highlight, amber active state, cyan hover ring, 3px corners.
+- **Boot sequence** with a real progress bar driven by actual bytes fetched.
+- **Data footer** built from `manifest.json`, so "Data as of 2026-07-29" is read
+  from the pipeline rather than typed.
+
+### Two real bugs found and fixed
+
+1. **MapLibre's worker never fetched the GeoJSON.** Given source URLs, the
+   worker issued no request and raised no error — the source simply never
+   loaded. Fixed by fetching on the main thread (`js/data.js`) and handing
+   MapLibre parsed objects. This is strictly better anyway: it's what makes the
+   byte-accurate progress bar possible, and a 42 MB building file needs one.
+2. **A hidden browser tab gets no `requestAnimationFrame`**, so MapLibre never
+   renders and never finishes loading tiles. This cost real debugging time —
+   it presents exactly like a broken data layer. Added an opt-in `?pump=1` dev
+   flag that forces redraws on a timer, purely so the page can be screenshotted
+   headlessly. Off by default.
+
+### Deferred
+
+- Buildings — Phase 3.
+- Any data view or overlay — Phase 4.
+- Day/night, planes, HUD numbers, news, audio — Phase 5.
+- Shoreline detail: the borough polygon's coastline is the clip boundary, so
+  piers and marsh edges are as coarse as DCP publishes them. Fine at this
+  camera height; revisit only if the Phase 7 pass says otherwise.
+
+### Self-review against the rules
+
+- *Rule 1 (viewer, not game):* every control is a camera move. Nothing in this
+  phase can change what the next viewer sees. ✅
+- *Rule 2 (no invented data):* the coastline, roads and parkland are all real
+  geometry. Nothing was drawn to fill a gap. ✅
+- *Rule 5 (standalone identity):* built from the Phase 0 tokens; no shared
+  masthead, no inherited components, no `?lang=` pattern. ✅
+- *Creep check:* the ferry-route styling wasn't specified. It's four lines of
+  paint on data already in the file, and the alternative was ferry routes
+  rendering as if they were roads — which would have been *wrong*, not just
+  unstyled.
+- *Palette note:* the first pass was too dark — the borough read as a
+  silhouette. Land and roads were lightened and the vignette softened. The
+  identity doc's tokens were updated to match, so the doc stays the contract.

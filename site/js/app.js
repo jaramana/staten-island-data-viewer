@@ -1,0 +1,185 @@
+/* Staten Island Data Viewer — app shell.
+
+   Everything here reveals; nothing here changes the city. Camera moves,
+   layer toggles and popups only. There is no editable state, by design.
+*/
+
+import { CAMERA, MAX_BOUNDS, VIEWPOINTS } from "./config.js";
+import { loadAll, loadFile } from "./data.js";
+import { applyAtmosphere, buildStyle } from "./style.js";
+
+const $ = (sel) => document.querySelector(sel);
+
+/* ---------------------------------------------------------------- boot bar */
+
+const boot = {
+  el: $("#boot"),
+  bar: $("#boot .bar span"),
+  step: $("#boot .step"),
+  set(pct, text) {
+    if (this.bar) this.bar.style.width = pct + "%";
+    if (text && this.step) this.step.textContent = text;
+  },
+  done() {
+    this.set(100, "ready");
+    setTimeout(() => this.el && this.el.classList.add("done"), 220);
+  },
+};
+
+/* ------------------------------------------------------------------- map */
+
+boot.set(4, "fetching borough");
+
+const BASE_FILES = ["boundary.geojson", "parks.geojson", "roads.geojson"];
+
+const LOAD_LABEL = {
+  boundary: "borough outline",
+  parks: "parkland",
+  roads: "street network",
+};
+
+const base = await loadAll(BASE_FILES, (key, overall) => {
+  boot.set(4 + Math.round(overall * 56), LOAD_LABEL[key] || key);
+});
+
+boot.set(62, "building the world");
+
+const map = new maplibregl.Map({
+  container: "map",
+  style: buildStyle(base),
+  center: CAMERA.center,
+  zoom: CAMERA.zoom,
+  pitch: CAMERA.pitch,
+  bearing: CAMERA.bearing,
+  minZoom: CAMERA.minZoom,
+  maxZoom: CAMERA.maxZoom,
+  minPitch: CAMERA.minPitch,
+  maxPitch: CAMERA.maxPitch,
+  maxBounds: MAX_BOUNDS,
+  attributionControl: false,
+  dragRotate: true,
+  antialias: true,
+  fadeDuration: 200,
+});
+
+window.__map = map; // for console inspection during development
+
+map.on("load", () => {
+  boot.set(88, "lighting the scene");
+  applyAtmosphere(map);
+  map.touchZoomRotate.enableRotation();
+  boot.done();
+});
+
+map.on("error", (e) => {
+  const msg = (e && e.error && e.error.message) || "unknown map error";
+  console.error("map error:", msg, e);
+  if (boot.step) boot.step.textContent = "error: " + msg;
+});
+
+/* --------------------------------------------------------- camera controls */
+
+function flyTo(vp) {
+  map.easeTo({
+    center: vp.center,
+    zoom: vp.zoom,
+    pitch: vp.pitch,
+    bearing: vp.bearing,
+    duration: 900,
+    essential: true,
+  });
+}
+
+function buildViewpoints() {
+  const host = $("#viewpoints");
+  if (!host) return;
+  VIEWPOINTS.forEach((vp, i) => {
+    const b = document.createElement("button");
+    b.className = "btn" + (i === 0 ? " is-active" : "");
+    b.type = "button";
+    b.textContent = vp.label;
+    b.addEventListener("click", () => {
+      host.querySelectorAll(".btn").forEach((x) => x.classList.remove("is-active"));
+      b.classList.add("is-active");
+      flyTo(vp);
+    });
+    host.appendChild(b);
+  });
+}
+
+/* The compass needle is drawn in code — no icon font, no image file. */
+function buildCompass() {
+  const el = $("#compass");
+  if (!el) return;
+  el.innerHTML = `
+    <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
+      <g id="needle">
+        <polygon points="13,2 17,14 13,11.5 9,14" fill="#e2564a" stroke="#0d1520" stroke-width="1"/>
+        <polygon points="13,24 9,12 13,14.5 17,12" fill="#c6d4e4" stroke="#0d1520" stroke-width="1"/>
+      </g>
+    </svg>`;
+  el.title = "Reset bearing to north (click)";
+  el.addEventListener("click", () =>
+    map.easeTo({ bearing: 0, pitch: CAMERA.pitch, duration: 600 })
+  );
+  const needle = el.querySelector("#needle");
+  const sync = () => {
+    needle.setAttribute("transform", `rotate(${-map.getBearing()} 13 13)`);
+  };
+  map.on("rotate", sync);
+  sync();
+}
+
+/* Keyboard: camera only. Arrow keys pan, Q/E rotate, R/F tilt, 0 resets. */
+function bindKeys() {
+  window.addEventListener("keydown", (e) => {
+    if (e.target && /input|textarea/i.test(e.target.tagName)) return;
+    const step = e.shiftKey ? 3 : 1;
+    switch (e.key.toLowerCase()) {
+      case "q": map.easeTo({ bearing: map.getBearing() - 8 * step, duration: 180 }); break;
+      case "e": map.easeTo({ bearing: map.getBearing() + 8 * step, duration: 180 }); break;
+      case "r": map.easeTo({ pitch: Math.min(CAMERA.maxPitch, map.getPitch() + 4 * step), duration: 180 }); break;
+      case "f": map.easeTo({ pitch: Math.max(CAMERA.minPitch, map.getPitch() - 4 * step), duration: 180 }); break;
+      case "0": flyTo(VIEWPOINTS[0]); break;
+      default: return;
+    }
+    e.preventDefault();
+  });
+}
+
+/* ------------------------------------------------------------ data footer */
+
+async function buildFooter() {
+  const el = $("#data-footer");
+  if (!el) return;
+  try {
+    const man = await loadFile("manifest.json");
+    const dates = Object.values(man.sources)
+      .map((s) => s.publisher_updated_at)
+      .filter(Boolean)
+      .sort();
+    const newest = dates.length ? dates[dates.length - 1].slice(0, 10) : "—";
+    const oldest = dates.length ? dates[0].slice(0, 10) : "—";
+    const n = Object.keys(man.sources).length;
+    el.innerHTML =
+      `<strong>Data as of ${newest}</strong> — ${n} NYC Open Data datasets, ` +
+      `published between ${oldest} and ${newest}. ` +
+      `A snapshot, not a live feed. Nothing here is simulated or invented. ` +
+      `<a href="../DATA_SOURCES.md">Sources &amp; vintages →</a>`;
+  } catch (err) {
+    el.textContent = "Data manifest unavailable — run pipeline/process.py.";
+  }
+}
+
+/* Dev aid, opt-in via ?pump=1. A hidden or backgrounded tab gets no
+   requestAnimationFrame, so MapLibre never renders and never finishes loading
+   tiles — which makes automated screenshots of this page impossible. Forcing a
+   redraw on a timer works around that. Off unless explicitly asked for. */
+if (new URLSearchParams(location.search).has("pump")) {
+  setInterval(() => map.redraw(), 120);
+}
+
+buildViewpoints();
+buildCompass();
+bindKeys();
+buildFooter();

@@ -50,7 +50,7 @@ html, body {
   pointer-events: none;
   z-index: 5;
   background: radial-gradient(ellipse at 50% 45%,
-    rgba(0,0,0,0) 45%, rgba(0,0,0,0.22) 78%, rgba(0,0,0,0.45) 100%);
+    rgba(0,0,0,0) 52%, rgba(0,0,0,0.12) 80%, rgba(0,0,0,0.30) 100%);
 }
 
 /* ------------------------------------------------------------------ panels */
