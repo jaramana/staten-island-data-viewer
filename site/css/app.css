@@ -223,6 +223,35 @@ html, body {
 #data-footer a { color: var(--accent-cyan); text-decoration: none; }
 #data-footer a:hover { text-decoration: underline; }
 
+/* ------------------------------------------------------------- city chip */
+
+#city-chip {
+  position: absolute;
+  right: 12px;
+  top: 68px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--chrome-100);
+  transition: opacity 700ms ease-out;
+}
+#city-chip.fade { opacity: 0; }
+#city-chip .dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--accent-amber);
+  box-shadow: 0 0 8px var(--accent-amber);
+  animation: pulse 1.1s ease-in-out infinite;
+}
+#city-chip .dot.ok { background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); animation: none; }
+#city-chip .dot.bad { background: var(--accent-red); box-shadow: 0 0 8px var(--accent-red); animation: none; }
+@keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: 0.35 } }
+
 /* --------------------------------------------------------------- loading */
 
 #boot {

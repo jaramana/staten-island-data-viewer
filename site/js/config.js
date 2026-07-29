@@ -24,6 +24,21 @@ export const PALETTE = {
   hazeDay: "#cfd9c8",
 };
 
+/* Land-use ramp. Keys and colours mirror pipeline/landuse.py and
+   docs/VISUAL_IDENTITY.md §2.3 — the pipeline also emits legend_landuse.json,
+   which the legend UI reads, so the map and the legend cannot disagree. */
+export const LANDUSE_COLORS = {
+  res_low: "#7fbf5a",
+  res_multi: "#3f9142",
+  mixed: "#4bb6a4",
+  commercial: "#3d85c8",
+  industrial: "#e0b544",
+  institutional: "#9b6fc4",
+  openspace: "#5f8f4e",
+  vacant: "#9c9481",
+  unknown: "#6b7280",
+};
+
 /* Staten Island, with a margin of harbour on every side so the borough never
    sits flush against the viewport edge. */
 export const MAX_BOUNDS = [

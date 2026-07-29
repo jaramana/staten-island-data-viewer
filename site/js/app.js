@@ -6,9 +6,51 @@
 
 import { CAMERA, MAX_BOUNDS, VIEWPOINTS } from "./config.js";
 import { loadAll, loadFile } from "./data.js";
-import { applyAtmosphere, buildStyle } from "./style.js";
+import { addBuildingLayers, applyAtmosphere, buildStyle } from "./style.js";
 
 const $ = (sel) => document.querySelector(sel);
+
+/* ---------------------------------------------------------------- dev aid */
+
+/* Opt-in via ?pump=1, for headless verification only.
+ *
+ * A hidden or backgrounded tab is never given requestAnimationFrame, and
+ * MapLibre schedules *everything* through it — applying the style, loading
+ * tiles, rendering. Without rAF the map silently never finishes loading, which
+ * looks exactly like broken data. Calling `map.redraw()` on a timer doesn't
+ * help, because the work is queued in rAF callbacks that never run.
+ *
+ * So: give the page a real rAF, backed by a MessageChannel round-trip (not
+ * clamped to 1 Hz the way setTimeout is in a hidden tab). This is self-limiting
+ * rather than a busy loop — MapLibre stops requesting frames once it's idle. */
+if (new URLSearchParams(location.search).has("pump")) {
+  const queue = [];
+  const ch = new MessageChannel();
+  let scheduled = false;
+  const flush = () => {
+    scheduled = false;
+    const due = queue.splice(0, queue.length);
+    const t = performance.now();
+    for (const cb of due) {
+      try { cb(t); } catch (e) { console.error(e); }
+    }
+  };
+  ch.port1.onmessage = flush;
+
+  let id = 0;
+  const pending = new Map();
+  window.requestAnimationFrame = (cb) => {
+    const handle = ++id;
+    pending.set(handle, cb);
+    queue.push((t) => { if (pending.delete(handle)) cb(t); });
+    if (!scheduled) {
+      scheduled = true;
+      ch.port2.postMessage(0);
+    }
+    return handle;
+  };
+  window.cancelAnimationFrame = (handle) => pending.delete(handle);
+}
 
 /* ---------------------------------------------------------------- boot bar */
 
@@ -30,7 +72,14 @@ const boot = {
 
 boot.set(4, "fetching borough");
 
-const BASE_FILES = ["boundary.geojson", "parks.geojson", "roads.geojson"];
+/* [file, progress weight]. The base map is small and goes up first; the city
+   itself (~85% of the payload) streams in afterwards, over a map that is
+   already on screen and already interactive. */
+const BASE_FILES = [
+  ["boundary.geojson", 1],
+  ["parks.geojson", 1],
+  ["roads.geojson", 6],
+];
 
 const LOAD_LABEL = {
   boundary: "borough outline",
@@ -69,7 +118,47 @@ map.on("load", () => {
   applyAtmosphere(map);
   map.touchZoomRotate.enableRotation();
   boot.done();
+  loadCity();
 });
+
+/* ------------------------------------------------------------- the city */
+
+/* A small chip in the corner while the buildings stream in, so the empty
+   borough never looks like the finished product. */
+function cityChip() {
+  const el = document.createElement("div");
+  el.className = "panel";
+  el.id = "city-chip";
+  el.innerHTML = `<span class="dot"></span><span class="txt">Building the city…</span>`;
+  document.body.appendChild(el);
+  return {
+    set(pct) {
+      el.querySelector(".txt").textContent = `Building the city… ${Math.round(pct * 100)}%`;
+    },
+    done(n) {
+      el.querySelector(".dot").classList.add("ok");
+      el.querySelector(".txt").textContent = `${n.toLocaleString()} buildings`;
+      setTimeout(() => el.classList.add("fade"), 2600);
+      setTimeout(() => el.remove(), 3400);
+    },
+    fail(msg) {
+      el.querySelector(".dot").classList.add("bad");
+      el.querySelector(".txt").textContent = msg;
+    },
+  };
+}
+
+async function loadCity() {
+  const chip = cityChip();
+  try {
+    const buildings = await loadFile("buildings.geojson", (f) => chip.set(f));
+    addBuildingLayers(map, buildings);
+    chip.done(buildings.features.length);
+  } catch (err) {
+    console.error(err);
+    chip.fail("Buildings unavailable — run pipeline/process.py");
+  }
+}
 
 map.on("error", (e) => {
   const msg = (e && e.error && e.error.message) || "unknown map error";
@@ -171,13 +260,20 @@ async function buildFooter() {
   }
 }
 
-/* Dev aid, opt-in via ?pump=1. A hidden or backgrounded tab gets no
-   requestAnimationFrame, so MapLibre never renders and never finishes loading
-   tiles — which makes automated screenshots of this page impossible. Forcing a
-   redraw on a timer works around that. Off unless explicitly asked for. */
-if (new URLSearchParams(location.search).has("pump")) {
-  setInterval(() => map.redraw(), 120);
-}
+/* Companion to the rAF shim above: wait until the map has settled, so a
+   headless driver can screenshot a finished frame instead of a half-drawn one. */
+window.__settled = (timeoutMs = 30000) =>
+  new Promise((resolve) => {
+    const t0 = performance.now();
+    const check = () => {
+      if (map.loaded() || performance.now() - t0 > timeoutMs) {
+        resolve({ ms: Math.round(performance.now() - t0), loaded: map.loaded() });
+      } else {
+        requestAnimationFrame(check);
+      }
+    };
+    check();
+  });
 
 buildViewpoints();
 buildCompass();

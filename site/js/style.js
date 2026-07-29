@@ -8,7 +8,7 @@
    does most of the work of making a map read as a game board rather than a GIS
    layer. */
 
-import { PALETTE as P } from "./config.js";
+import { LANDUSE_COLORS, PALETTE as P } from "./config.js";
 
 /* Sources carry already-parsed GeoJSON, not URLs.
 
@@ -161,6 +161,51 @@ export function buildStyle(data) {
       },
     ],
   };
+}
+
+/* The city itself, added after the base map is already on screen.
+
+   142,455 extruded footprints are ~85% of the payload and most of the tiling
+   cost, so the base map goes up first and stays interactive while this loads
+   in behind it. Layers are inserted *below* the ferry line so the ferry wake
+   still reads on top of the waterfront. */
+export function addBuildingLayers(map, buildings) {
+  map.addSource("buildings", { type: "geojson", data: buildings });
+
+  const before = map.getLayer("roads-ferry") ? "roads-ferry" : undefined;
+
+  /* Colour is the land-use category from the PLUTO join; height is the real
+     roof height in metres. Neither is invented: a building with no PLUTO match
+     carries `unknown` and gets the grey that has its own legend entry. */
+  map.addLayer({
+    id: "buildings",
+    type: "fill-extrusion",
+    source: "buildings",
+    filter: ["has", "h"],
+    paint: {
+      "fill-extrusion-color": [
+        "match", ["get", "lu"],
+        ...Object.entries(LANDUSE_COLORS).flatMap(([k, v]) => [k, v]),
+        LANDUSE_COLORS.unknown,
+      ],
+      "fill-extrusion-height": ["get", "h"],
+      "fill-extrusion-base": 0,
+      /* Darkens each wall towards its base — the cheapest single thing that
+         makes extrusions read as buildings rather than coloured boxes. */
+      "fill-extrusion-vertical-gradient": true,
+      "fill-extrusion-opacity": 0.96,
+    },
+  }, before);
+
+  /* The 92 buildings with no recorded roof height. Drawn flat, so they are
+     visibly present and visibly *not* a guess. */
+  map.addLayer({
+    id: "buildings-flat",
+    type: "fill",
+    source: "buildings",
+    filter: ["!", ["has", "h"]],
+    paint: { "fill-color": LANDUSE_COLORS.unknown, "fill-opacity": 0.7 },
+  }, before);
 }
 
 /* Sun and haze. Kept out of the style object because support varies by

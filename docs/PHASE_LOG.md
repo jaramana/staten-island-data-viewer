@@ -242,3 +242,80 @@ a camera locked to a city-builder oblique.
 - *Palette note:* the first pass was too dark — the borough read as a
   silhouette. Land and roads were lightened and the vignette softened. The
   identity doc's tokens were updated to match, so the doc stays the contract.
+
+---
+
+## Phase 3 — Procedural buildings ✅
+
+The core visual: 142,455 real footprints, extruded to real roof heights,
+coloured by real land use.
+
+### Built
+
+- **`fill-extrusion` from the Phase 1 join.** Height is `height_roof` in
+  metres; colour is a `match` on the 8-category land-use collapse.
+  `fill-extrusion-vertical-gradient` darkens each wall toward its base, which
+  is the single cheapest thing that makes extrusions read as buildings rather
+  than coloured boxes.
+- **Missing data stays missing.** The 5,144 buildings with no PLUTO match are
+  grey `unknown` with their own legend entry — they cluster around the St.
+  George terminal and the port, which is exactly where city-owned parcels
+  without ordinary lot records would be. The 92 buildings with no roof height
+  render as **flat footprints** in a separate layer rather than being given a
+  plausible-looking height.
+- **Deferred loading.** Buildings are ~85% of the payload, so the base map now
+  goes up first and stays interactive while the city streams in behind it,
+  with a corner chip showing progress and settling into "142,455 buildings".
+  Before this change nothing appeared at all until the whole 42 MB had landed.
+
+### Performance gate — PASSED
+
+Frame cost measured over 24 forced redraws while rotating, per view:
+
+| View | median | p95 | max |
+|---|---:|---:|---:|
+| Whole borough, z11.6 (all 142k in frame) | 1.3 ms | 3.2 ms | 4.4 ms |
+| North Shore, z13 | 3.5 ms | 11.2 ms | 18.8 ms |
+| St. George, z14.4 | 1.5 ms | 2.5 ms | 4.0 ms |
+| Street level, z16.5 | 1.4 ms | 3.0 ms | 3.2 ms |
+
+Comfortably inside a 16.7 ms frame budget everywhere, including the
+whole-borough view with every building on screen. **No vector tiling needed** —
+the Phase 1 decision to stay with plain simplified GeoJSON holds.
+
+Caveat stated plainly: this is an Apple Silicon dev machine. PLAN.md's
+mid-range-laptop check is Phase 7 and still owed.
+
+### A third rendering bug, worth recording
+
+MapLibre schedules *everything* through `requestAnimationFrame` — applying the
+style, loading tiles, rendering — and a hidden tab never gets one. Calling
+`map.redraw()` on a timer does not help, because the pending work sits in rAF
+callbacks that never run; and a tight `MessageChannel` redraw loop starves the
+tile worker and the compositor, so screenshots time out too. The fix is to give
+the page a real rAF backed by a MessageChannel round-trip (`?pump=1`), after
+which everything loads normally. `window.__settled()` waits for a finished
+frame. Both are opt-in dev aids, off in normal use.
+
+### Deferred
+
+- **Self-generated facade/window texture** (PLAN.md §2.1). MapLibre's
+  `fill-extrusion-pattern` replaces the fill colour rather than tinting it,
+  which would destroy the per-building data binding that is the point of this
+  project. Not worth breaking the premise for; revisit only if a tint-preserving
+  approach appears.
+- Aerial orthoimagery ground drape, day/night, bloom — Phase 5 / Phase 7.
+- Click-to-inspect on buildings — Phase 4, with the other interactions.
+
+### Self-review against the rules
+
+- *Rule 1 (viewer, not game):* still nothing that changes the city. ✅
+- *Rule 2 (no invented data):* the strongest test yet, and it holds in both
+  directions — no fabricated heights, no fabricated land use, and both gaps are
+  *visible* rather than smoothed over. ✅
+- *Rule 3 (minimal first):* the performance gate was met without adding a
+  tiling toolchain, an LOD scheme, or a zoom cutoff. Nothing was added
+  pre-emptively. ✅
+- *Creep check:* deferred building loading and the progress chip weren't in the
+  plan. They are load-behaviour, not features, and the alternative was a blank
+  screen for the entire 42 MB fetch.

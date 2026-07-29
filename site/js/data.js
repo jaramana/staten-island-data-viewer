@@ -45,17 +45,25 @@ export async function loadFile(name, onProgress) {
   return json;
 }
 
-/** Fetch several files, reporting overall progress across them. */
+/** Fetch several files, reporting overall progress across them.
+ *
+ * `names` may be plain filenames or [filename, weight] pairs. Weights matter:
+ * buildings.geojson is ~85% of the payload, so an unweighted bar would sit at
+ * 75% for almost the whole load and then jump. */
 export async function loadAll(names, onStep) {
+  const entries = names.map((n) => (Array.isArray(n) ? n : [n, 1]));
+  const total = entries.reduce((s, [, w]) => s + w, 0);
   const out = {};
-  for (let i = 0; i < names.length; i++) {
-    const name = names[i];
+  let done = 0;
+
+  for (const [name, weight] of entries) {
     const key = name.replace(/\.(geo)?json$/, "");
-    if (onStep) onStep(key, i / names.length, 0);
+    if (onStep) onStep(key, done / total, 0);
     out[key] = await loadFile(name, (frac) => {
-      if (onStep) onStep(key, (i + frac) / names.length, frac);
+      if (onStep) onStep(key, (done + frac * weight) / total, frac);
     });
-    if (onStep) onStep(key, (i + 1) / names.length, 1);
+    done += weight;
+    if (onStep) onStep(key, done / total, 1);
   }
   return out;
 }
