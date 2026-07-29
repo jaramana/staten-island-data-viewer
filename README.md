@@ -54,6 +54,20 @@ Regenerate the provenance doc from what was actually fetched:
 .venv/bin/python pipeline/make_data_sources.py
 ```
 
+## Viewing it locally
+
+```bash
+node pipeline/serve.js 8787
+```
+
+then open <http://localhost:8787/site/index.html>.
+
+`?pump=1` is a development-only flag. A hidden or backgrounded browser tab is
+never given `requestAnimationFrame`, and MapLibre schedules style loading, tile
+loading and rendering through it — so in a headless/automated context the map
+silently never finishes loading. The flag installs a `MessageChannel`-backed
+rAF so the page can be screenshotted. Normal use needs nothing.
+
 ## Data honesty rules
 
 1. Every rendered value traces to a published dataset row. Presentation is

@@ -138,8 +138,14 @@ SOURCES = {
         agency="Police Department (NYPD)",
         role="Crime data view, aggregated to precinct + hex grid (never plotted raw)",
         select=(
-            "cmplnt_num,addr_pct_cd,cmplnt_fr_dt,ofns_desc,law_cat_cd,"
+            "cmplnt_num,addr_pct_cd,cmplnt_fr_dt,rpt_dt,ofns_desc,law_cat_cd,"
             "prem_typ_desc,latitude,longitude"
+        ),
+        note=(
+            "Both dates are pulled deliberately. `rpt_dt` is when the complaint was "
+            "reported (the year-to-date window this file covers); `cmplnt_fr_dt` is "
+            "when the incident is said to have occurred, and can be years earlier. "
+            "Conflating them would misdescribe the dataset."
         ),
         where="boro_nm='STATEN ISLAND'",
         order="cmplnt_num",

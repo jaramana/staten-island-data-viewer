@@ -307,15 +307,19 @@ def step_crime():
     by_hex = defaultdict(Counter)
     by_pct = defaultdict(Counter)
     offences = Counter()
-    dates = []
+    occurred, reported = [], []
     nogeo = 0
     for r in rows:
         lat, lon = fnum(r.get("latitude")), fnum(r.get("longitude"))
         cat = LAW_CAT.get((r.get("law_cat_cd") or "").strip().upper())
         pct = (r.get("addr_pct_cd") or "").strip()
+        # Two different dates, kept apart on purpose — see sources.py.
         d = (r.get("cmplnt_fr_dt") or "")[:10]
         if d:
-            dates.append(d)
+            occurred.append(d)
+        rd = (r.get("rpt_dt") or "")[:10]
+        if rd:
+            reported.append(rd)
         if cat:
             offences[(cat, (r.get("ofns_desc") or "UNKNOWN").strip().title())] += 1
         if pct:
@@ -353,15 +357,22 @@ def step_crime():
     REPORT["precincts"] = write("precincts.geojson", geo.fc(pfeats))
 
     top = [{"cat": k[0], "offence": k[1], "n": v} for k, v in offences.most_common(15)]
+    n_old = sum(1 for d in occurred if reported and d < min(reported))
     REPORT["crime_meta"] = write("crime_meta.json", {
         "total": len(rows),
         "no_coordinates": nogeo,
-        "date_min": min(dates) if dates else None,
-        "date_max": max(dates) if dates else None,
+        "reported_min": min(reported) if reported else None,
+        "reported_max": max(reported) if reported else None,
+        "occurred_min": min(occurred) if occurred else None,
+        "occurred_max": max(occurred) if occurred else None,
+        "reported_before_window": n_old,
         "hex_metres": CRIME_HEX_M,
         "top_offences": top,
-        "note": ("Year-to-date NYPD complaint records, aggregated to a hex grid and to "
-                 "precinct. Individual complaint locations are deliberately not plotted."),
+        "note": ("NYPD complaints *reported* in the current year to date, aggregated to "
+                 "a hex grid and to precinct. A complaint's incident date can be much "
+                 "earlier than its report date, so the two ranges are kept separate and "
+                 "are not interchangeable. Individual complaint locations are "
+                 "deliberately not plotted."),
     })
 
 
@@ -385,10 +396,26 @@ def step_311():
         x, y = geo.to_plane(lon, lat)
         by_type_hex[key][geo.hex_key(x, y, SR311_HEX_M)] += 1
 
+    # Complaint types differ in volume by more than an order of magnitude, so a
+    # single absolute colour ramp would render the quieter ones as one flat
+    # colour. Each type gets its own quintile breaks, computed from its own real
+    # counts; `q` is the bucket, `n` is still the real number and is what the
+    # popup and the legend show.
+    breaks = {}
+    for t, cells in by_type_hex.items():
+        vals = sorted(cells.values())
+        breaks[t] = [vals[int(len(vals) * p)] for p in (0.2, 0.4, 0.6, 0.8)]
+
+    def bucket(t, n):
+        return sum(1 for b in breaks[t] if n > b)
+
     feats = []
     for t, cells in by_type_hex.items():
         for (q, r_), n in cells.items():
-            feats.append(geo.feature(geo.hex_polygon(q, r_, SR311_HEX_M), {"t": t, "n": n}))
+            feats.append(geo.feature(
+                geo.hex_polygon(q, r_, SR311_HEX_M),
+                {"t": t, "n": n, "q": bucket(t, n)},
+            ))
     print(f"    {len(rows):,} requests | {len(type_counts):,} distinct types "
           f"-> {len(feats):,} (type, cell) records")
     REPORT["sr311_hex"] = write("sr311_hex.geojson", geo.fc(feats))
@@ -399,6 +426,8 @@ def step_311():
         "window_end": max(dates) if dates else None,
         "hex_metres": SR311_HEX_M,
         "rendered_types": SR311_TYPES,
+        "quintile_breaks": breaks,
+        "type_totals": {t: sum(c.values()) for t, c in by_type_hex.items()},
         "distinct_types": len(type_counts),
         "top_types": [{"type": t, "n": n} for t, n in type_counts.most_common(25)],
         "note": ("Trailing 12 months of Staten Island 311 requests. The six rendered "

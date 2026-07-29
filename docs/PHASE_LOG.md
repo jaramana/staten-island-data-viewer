@@ -319,3 +319,81 @@ frame. Both are opt-in dev aids, off in normal use.
 - *Creep check:* deferred building loading and the progress chip weren't in the
   plan. They are load-behaviour, not features, and the alternative was a blank
   screen for the entire 42 MB fetch.
+
+---
+
+## Phase 4 — Data views ✅
+
+Five views, each independently toggleable, each with its own legend and its own
+click-to-inspect behaviour.
+
+### Built
+
+- **View switcher** — a vertical tab strip bottom-left in the project's own
+  chrome, with a legend panel under it that rebuilds per view. Each view's data
+  is fetched the *first* time it's opened, so startup cost stays at base map +
+  buildings.
+- **City** — the land-use ramp, with all nine categories in the legend
+  including "No land-use record".
+- **Crime** — NYPD complaints in 300 m hexes over a five-step ramp, plus
+  precinct boundaries. Clicking a cell reports its counts *and* traces the
+  precinct it falls in.
+- **311** — the six chosen types plus "All other types", switchable from the
+  legend. Shading is **per-type quintiles computed in the pipeline**, because
+  type volumes differ by 5× and a single absolute ramp rendered the quieter
+  types as one flat colour. The popup always shows the real count.
+- **Trees** — two-circle markers (dark halo, coloured core) sized and coloured
+  by real trunk diameter.
+- **Services** — precinct boundaries, fire company response areas, and
+  firehouse badges. Clicking any of them traces its boundary.
+- **Click-to-inspect everywhere**, in chrome-styled popups. Every popup names
+  its source, and absent fields read "not recorded" rather than being filled.
+
+### A data-honesty bug the UI caught
+
+The first crime legend read *"10,807 complaints, 1999-09-03 to 2026-06-30"* —
+in a file described as year-to-date. The cause is real and worth stating:
+`cmplnt_fr_dt` is when an incident is said to have **occurred**, which for some
+complaints is decades before it was **reported**. The pipeline now pulls
+`rpt_dt` as well and keeps the two ranges strictly separate. The legend now
+reads:
+
+> 10,807 complaints reported 2026-01-01 to 2026-06-30. 437 of them concern
+> incidents from before that window — earliest 1999-09-03.
+
+That is both accurate and more interesting than the sentence it replaced.
+
+### Three real bugs fixed
+
+1. **View-load race.** `ensure()` marked a view ready *before* its data arrived,
+   so a second view switch skipped the load and showed an empty view. Now the
+   in-flight promise is cached, and a failed load is not cached at all so the
+   view can recover. A slower earlier switch also can't repaint over a faster
+   later one.
+2. **Duplicate source.** Crime and Services both need precincts; opening them
+   concurrently would add the same source twice. Now memoised in one place.
+3. **`closeOnClick` ate every second click.** With popups, the first click only
+   dismissed the previous popup — maddening when clicking around *is* the
+   product. Now a click on empty space closes it explicitly instead.
+
+Also: precinct numbers now read "122nd", not "122th".
+
+### Deferred
+
+- Live traffic and live transit — Phase 6, still out of scope.
+- Phase 5's flourishes (planes, day/night, HUD numbers, news, audio).
+
+### Self-review against the rules
+
+- *Rule 1 (viewer, not game):* this is the phase where the rule could most
+  easily have been broken, so, explicitly: every interaction reveals and none
+  mutates. Toggling a view, picking a 311 type, and highlighting a precinct are
+  all view state — nothing is persisted, nothing is written, and a reload gives
+  every visitor the identical city. There is no placement, no zoning, no
+  bulldozing, and no slider that does anything. ✅
+- *Rule 2 (no invented data):* per-type quintiles are computed from real counts
+  and the real number is always shown alongside; the crime date fix is the
+  clearest case of choosing the accurate statement over the tidy one. ✅
+- *Creep check:* the crime-cell → precinct link wasn't specified. It uses two
+  layers already on screen and makes an otherwise decorative boundary do work.
+  Flagging it rather than quietly counting it as "the plan".

@@ -6,7 +6,9 @@
 
 import { CAMERA, MAX_BOUNDS, VIEWPOINTS } from "./config.js";
 import { loadAll, loadFile } from "./data.js";
+import { bindInspect } from "./inspect.js";
 import { addBuildingLayers, applyAtmosphere, buildStyle } from "./style.js";
+import { ViewManager, VIEWS } from "./views.js";
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -158,6 +160,77 @@ async function loadCity() {
     console.error(err);
     chip.fail("Buildings unavailable — run pipeline/process.py");
   }
+  buildViewSwitcher();
+  bindInspect(map, views);
+}
+
+/* ------------------------------------------------------------- data views */
+
+const views = new ViewManager(map, { onLegend: renderLegend });
+window.__views = views;
+
+function buildViewSwitcher() {
+  const host = $("#view-switcher");
+  if (!host) return;
+  host.innerHTML = "";
+  for (const [key, v] of Object.entries(VIEWS)) {
+    const b = document.createElement("button");
+    b.className = "view-tab" + (key === views.current ? " is-active" : "");
+    b.type = "button";
+    b.dataset.view = key;
+    b.innerHTML = `<span class="vl">${v.label}</span><span class="vh">${v.hint}</span>`;
+    b.addEventListener("click", async () => {
+      host.querySelectorAll(".view-tab").forEach((x) => x.classList.remove("is-active"));
+      b.classList.add("is-active");
+      b.classList.add("is-loading");
+      try {
+        await views.show(key);
+      } catch (err) {
+        console.error(err);
+        renderLegend({ title: v.label, blurb: "This view's data failed to load." });
+      } finally {
+        b.classList.remove("is-loading");
+      }
+    });
+    host.appendChild(b);
+  }
+  renderLegend(views.legend());
+}
+
+function renderLegend(legend) {
+  const el = $("#legend");
+  if (!el) return;
+  if (!legend) {
+    el.innerHTML = "";
+    el.style.display = "none";
+    return;
+  }
+  el.style.display = "";
+
+  const swatches = (legend.swatches || [])
+    .map((s) => `<div class="lg-row">
+        <span class="lg-sw" style="background:${s.color}"></span>
+        <span class="lg-lb">${s.label}</span>
+      </div>`)
+    .join("");
+
+  const types = (legend.types || [])
+    .map((t) => `<button type="button" class="lg-type${t === legend.activeType ? " is-active" : ""}"
+        data-type="${t.replace(/"/g, "&quot;")}">${t}</button>`)
+    .join("");
+
+  el.innerHTML = `
+    <div class="panel-title">${legend.title}${legend.hint ? ` — ${legend.hint}` : ""}</div>
+    <div class="lg-body">
+      ${legend.blurb ? `<p class="lg-blurb">${legend.blurb}</p>` : ""}
+      ${types ? `<div class="lg-types">${types}</div>` : ""}
+      ${swatches}
+      ${legend.note ? `<p class="lg-note">${legend.note}</p>` : ""}
+    </div>`;
+
+  el.querySelectorAll(".lg-type").forEach((b) => {
+    b.addEventListener("click", () => views.setSr311Type(b.dataset.type));
+  });
 }
 
 map.on("error", (e) => {

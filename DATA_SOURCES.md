@@ -142,8 +142,9 @@ permit reuse with attribution. Attribution appears in the app footer.
 - **Licence:** NYC Open Data Terms of Use
 - **Access method:** SODA v2 REST, paged; `pipeline/download.py`
 - **Staten Island filter:** `boro_nm='STATEN ISLAND'`
-- **Fields pulled:** `cmplnt_num,addr_pct_cd,cmplnt_fr_dt,ofns_desc,law_cat_cd,prem_typ_desc,latitude,longitude`
-- **Fetched:** 2026-07-29T15:52:27+00:00 — 10,807 rows, 2.6 MB raw
+- **Fields pulled:** `cmplnt_num,addr_pct_cd,cmplnt_fr_dt,rpt_dt,ofns_desc,law_cat_cd,prem_typ_desc,latitude,longitude`
+- **Fetched:** 2026-07-29T16:34:40+00:00 — 10,807 rows, 3.0 MB raw
+- **Note:** Both dates are pulled deliberately. `rpt_dt` is when the complaint was reported (the year-to-date window this file covers); `cmplnt_fr_dt` is when the incident is said to have occurred, and can be years earlier. Conflating them would misdescribe the dataset.
 
 ### `sr311` — 311 Service Requests (2020 to Present)
 
