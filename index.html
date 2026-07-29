@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Staten Island Data Viewer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="An interactive-to-view 3D data viewer of Staten Island, built entirely from real NYC open data.">
+<!-- The app lives in /site/ so the data pipeline can sit beside it. This is
+     just the front door for static hosting. -->
+<meta http-equiv="refresh" content="0; url=./site/index.html">
+<link rel="canonical" href="./site/index.html">
+<style>
+  html, body { margin: 0; height: 100%; background: #0d1520; color: #c6d4e4;
+    font: 13px/1.6 "Helvetica Neue", Helvetica, Arial, sans-serif; }
+  .wrap { height: 100%; display: grid; place-items: center; text-align: center; }
+  a { color: #f0a830; }
+  .t { letter-spacing: 0.3em; text-transform: uppercase; font-size: 12px; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div>
+    <div class="t">Staten Island</div>
+    <p>Loading the viewer… <a href="./site/index.html">enter here</a> if nothing happens.</p>
+  </div>
+</div>
+<script>location.replace("./site/index.html");</script>
+</body>
+</html>
