@@ -8,9 +8,8 @@ The viewer is a map, not a game. You can fly the camera, click features, and
 switch between data views. You cannot change the city, because the city is a
 snapshot of real records.
 
-The visual style is drawn from early-2000s city-builder games, but every
-value on screen traces back to a published dataset. The style is invented;
-the data is not.
+The visual style is drawn from early-2000s city-builder games. Its
+game-inspired visuals display published New York City data.
 
 The project is a static site: vanilla HTML, CSS, and JavaScript, with
 MapLibre GL for the map. It has no framework, no backend, and no database.
